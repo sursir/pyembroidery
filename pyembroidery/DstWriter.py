@@ -147,10 +147,16 @@ def write(pattern, f, settings=None):
             write_string_utf8(f, "CP:%s\r" % meta_copyright)
         if len(pattern.threadlist) > 0:
             for thread in pattern.threadlist:
-                write_string_utf8(f, "TC:%s,%s,%s\r" %
-                                  (thread.hex_color(),
-                                   thread.description,
-                                   thread.catalog_number))
+                temp_tc = "TC:%s,%s,%s\r" % (
+                   thread.hex_color(),
+                   thread.description,
+                   thread.catalog_number
+                )
+                # ignore some TC exceed header:512b
+                # Because It will cause format error
+                if f.tell() + len(temp_tc.encode()) > 510:
+                    break
+                write_string_utf8(f, temp_tc)
     f.write(b'\x1a')
     for i in range(f.tell(), DSTHEADERSIZE):
         f.write(b'\x20')  # space
